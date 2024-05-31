@@ -4,6 +4,7 @@ Simply run a script and have an API endpoint ready to go for any Frontend testin
 ## How to
 
 *You need `PostgreSQL` installed
+
 *You MUST enter your own postgre database user password yourself
 
 Windows: Run `.\run_api_WINDOWS.ps1` in a Powershell command line
