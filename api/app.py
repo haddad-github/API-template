@@ -42,10 +42,71 @@ def index():
 @app.route('/movies', methods=['GET'])
 def get_movies():
     """
-    Retrieve all movies
+    Retrieve movies based on query parameters
     ---
     tags:
         - Full dump
+    parameters:
+        - name: series_title
+          in: query
+          type: string
+          description: Title of the movie
+        - name: released_year
+          in: query
+          type: integer
+          description: Release year of the movie
+        - name: runtime
+          in: query
+          type: string
+          description: Runtime of the movie
+        - name: runtime_lt
+          in: query
+          type: string
+          description: Runtime less than
+        - name: runtime_gt
+          in: query
+          type: string
+          description: Runtime greater than
+        - name: genre
+          in: query
+          type: string
+          description: Genre of the movie
+        - name: imdb_rating
+          in: query
+          type: number
+          description: IMDb rating of the movie
+        - name: imdb_rating_lt
+          in: query
+          type: number
+          description: IMDb rating less than
+        - name: imdb_rating_gt
+          in: query
+          type: number
+          description: IMDb rating greater than
+        - name: no_of_votes
+          in: query
+          type: integer
+          description: Number of votes
+        - name: no_of_votes_lt
+          in: query
+          type: integer
+          description: Number of votes less than
+        - name: no_of_votes_gt
+          in: query
+          type: integer
+          description: Number of votes greater than
+        - name: gross
+          in: query
+          type: string
+          description: Gross earnings of the movie
+        - name: gross_lt
+          in: query
+          type: string
+          description: Gross earnings less than
+        - name: gross_gt
+          in: query
+          type: string
+          description: Gross earnings greater than
     responses:
         200:
           description: A list of movies in JSON format.
@@ -109,7 +170,76 @@ def get_movies():
                         "gross": "28,341,469"
                       }
     """
-    movies = Movie.query.all()
+    query = Movie.query
+
+    #Filter by series_title
+    series_title = request.args.get('series_title')
+    if series_title:
+        query = query.filter(Movie.series_title.ilike(f"%{series_title}%"))
+
+    #Filter by released_year
+    released_year = request.args.get('released_year')
+    if released_year:
+        query = query.filter_by(released_year=released_year)
+
+    #Filter by runtime
+    runtime = request.args.get('runtime')
+    if runtime:
+        query = query.filter_by(runtime=runtime)
+
+    runtime_lt = request.args.get('runtime_lt')
+    if runtime_lt:
+        query = query.filter(Movie.runtime < runtime_lt)
+
+    runtime_gt = request.args.get('runtime_gt')
+    if runtime_gt:
+        query = query.filter(Movie.runtime > runtime_gt)
+
+    #Filter by genre
+    genre = request.args.get('genre')
+    if genre:
+        query = query.filter(Movie.genre.ilike(f"%{genre}%"))
+
+    #Filter by imdb_rating
+    imdb_rating = request.args.get('imdb_rating')
+    if imdb_rating:
+        query = query.filter_by(imdb_rating=imdb_rating)
+
+    imdb_rating_lt = request.args.get('imdb_rating_lt')
+    if imdb_rating_lt:
+        query = query.filter(Movie.imdb_rating < imdb_rating_lt)
+
+    imdb_rating_gt = request.args.get('imdb_rating_gt')
+    if imdb_rating_gt:
+        query = query.filter(Movie.imdb_rating > imdb_rating_gt)
+
+    #Filter by number_of_votes
+    no_of_votes = request.args.get('no_of_votes')
+    if no_of_votes:
+        query = query.filter_by(no_of_votes=no_of_votes)
+
+    no_of_votes_lt = request.args.get('no_of_votes_lt')
+    if no_of_votes_lt:
+        query = query.filter(Movie.no_of_votes < no_of_votes_lt)
+
+    no_of_votes_gt = request.args.get('no_of_votes_gt')
+    if no_of_votes_gt:
+        query = query.filter(Movie.no_of_votes > no_of_votes_gt)
+
+    #Filter by gross
+    gross = request.args.get('gross')
+    if gross:
+        query = query.filter_by(gross=gross)
+
+    gross_lt = request.args.get('gross_lt')
+    if gross_lt:
+        query = query.filter(Movie.gross < gross_lt)
+
+    gross_gt = request.args.get('gross_gt')
+    if gross_gt:
+        query = query.filter(Movie.gross > gross_gt)
+
+    movies = query.all()
     return jsonify([movie.to_dict() for movie in movies]), 200
 
 @app.route('/movies/<int:id>', methods=['GET'])
@@ -190,337 +320,6 @@ def get_movie(id):
     if movie is None:
         return jsonify({'error': 'Movie not found'}), 404
     return jsonify(movie.to_dict()), 200
-
-@app.route('/movies', methods=['POST'])
-def add_movie():
-    """
-    Add a new movie
-    ---
-    tags:
-        - Create entry
-    parameters:
-        - in: body
-          name: body
-          schema:
-            type: object
-            properties:
-                poster_link:
-                    type: string
-                series_title:
-                    type: string
-                released_year:
-                    type: integer
-                certificate:
-                    type: string
-                runtime:
-                    type: string
-                genre:
-                    type: string
-                imdb_rating:
-                    type: float
-                overview:
-                    type: string
-                meta_score:
-                    type: integer
-                director:
-                    type: string
-                star1:
-                    type: string
-                star2:
-                    type: string
-                star3:
-                    type: string
-                star4:
-                    type: string
-                no_of_votes:
-                    type: integer
-                gross:
-                    type: string
-            required:
-                - series_title
-                - imdb_rating
-            example:
-                  {
-                    "poster_link": "https://example.com/poster.jpg",
-                    "series_title": "New Movie",
-                    "released_year": 2021,
-                    "certificate": "A",
-                    "runtime": "120 min",
-                    "genre": "Drama",
-                    "imdb_rating": 8.5,
-                    "overview": "A new movie overview...",
-                    "meta_score": 75,
-                    "director": "Some Director",
-                    "star1": "Actor One",
-                    "star2": "Actor Two",
-                    "star3": "Actor Three",
-                    "star4": "Actor Four",
-                    "no_of_votes": 123456,
-                    "gross": "10,000,000"
-                  }
-    responses:
-        201:
-          description: The created movie.
-          schema:
-            type: object
-            properties:
-                id:
-                    type: integer
-                poster_link:
-                    type: string
-                series_title:
-                    type: string
-                released_year:
-                    type: integer
-                certificate:
-                    type: string
-                runtime:
-                    type: string
-                genre:
-                    type: string
-                imdb_rating:
-                    type: float
-                overview:
-                    type: string
-                meta_score:
-                    type: integer
-                director:
-                    type: string
-                star1:
-                    type: string
-                star2:
-                    type: string
-                star3:
-                    type: string
-                star4:
-                    type: string
-                no_of_votes:
-                    type: integer
-                gross:
-                    type: string
-            example:
-                  {
-                    "id": 101,
-                    "poster_link": "https://example.com/poster.jpg",
-                    "series_title": "New Movie",
-                    "released_year": 2021,
-                    "certificate": "A",
-                    "runtime": "120 min",
-                    "genre": "Drama",
-                    "imdb_rating": 8.5,
-                    "overview": "A new movie overview...",
-                    "meta_score": 75,
-                    "director": "Some Director",
-                    "star1": "Actor One",
-                    "star2": "Actor Two",
-                    "star3": "Actor Three",
-                    "star4": "Actor Four",
-                    "no_of_votes": 123456,
-                    "gross": "10,000,000"
-                  }
-    """
-    data = request.get_json()
-    new_movie = Movie(
-        poster_link=data.get('poster_link'),
-        series_title=data.get('series_title'),
-        released_year=data.get('released_year'),
-        certificate=data.get('certificate'),
-        runtime=data.get('runtime'),
-        genre=data.get('genre'),
-        imdb_rating=data.get('imdb_rating'),
-        overview=data.get('overview'),
-        meta_score=data.get('meta_score'),
-        director=data.get('director'),
-        star1=data.get('star1'),
-        star2=data.get('star2'),
-        star3=data.get('star3'),
-        star4=data.get('star4'),
-        no_of_votes=data.get('no_of_votes'),
-        gross=data.get('gross')
-    )
-    database.session.add(new_movie)
-    database.session.commit()
-    return jsonify(new_movie.to_dict()), 201
-
-@app.route('/movies/<int:id>', methods=['PUT'])
-def update_movie(id):
-    """
-    Update a movie by ID
-    ---
-    tags:
-        - Update entry
-    parameters:
-        - name: id
-          in: path
-          type: integer
-          required: true
-          description: ID of the movie to update
-        - in: body
-          name: body
-          schema:
-            type: object
-            properties:
-                poster_link:
-                    type: string
-                series_title:
-                    type: string
-                released_year:
-                    type: integer
-                certificate:
-                    type: string
-                runtime:
-                    type: string
-                genre:
-                    type: string
-                imdb_rating:
-                    type: float
-                overview:
-                    type: string
-                meta_score:
-                    type: integer
-                director:
-                    type: string
-                star1:
-                    type: string
-                star2:
-                    type: string
-                star3:
-                    type: string
-                star4:
-                    type: string
-                no_of_votes:
-                    type: integer
-                gross:
-                    type: string
-            example:
-                  {
-                    "poster_link": "https://example.com/poster.jpg",
-                    "series_title": "Updated Movie",
-                    "released_year": 2021,
-                    "certificate": "A",
-                    "runtime": "120 min",
-                    "genre": "Drama",
-                    "imdb_rating": 8.5,
-                    "overview": "An updated movie overview...",
-                    "meta_score": 75,
-                    "director": "Updated Director",
-                    "star1": "Updated Actor One",
-                    "star2": "Updated Actor Two",
-                    "star3": "Updated Actor Three",
-                    "star4": "Updated Actor Four",
-                    "no_of_votes": 123456,
-                    "gross": "10,000,000"
-                  }
-    responses:
-        200:
-          description: The updated movie.
-          schema:
-            type: object
-            properties:
-                id:
-                    type: integer
-                poster_link:
-                    type: string
-                series_title:
-                    type: string
-                released_year:
-                    type: integer
-                certificate:
-                    type: string
-                runtime:
-                    type: string
-                genre:
-                    type: string
-                imdb_rating:
-                    type: float
-                overview:
-                    type: string
-                meta_score:
-                    type: integer
-                director:
-                    type: string
-                star1:
-                    type: string
-                star2:
-                    type: string
-                star3:
-                    type: string
-                star4:
-                    type: string
-                no_of_votes:
-                    type: integer
-                gross:
-                    type: string
-            example:
-                  {
-                    "id": 101,
-                    "poster_link": "https://example.com/poster.jpg",
-                    "series_title": "Updated Movie",
-                    "released_year": 2021,
-                    "certificate": "A",
-                    "runtime": "120 min",
-                    "genre": "Drama",
-                    "imdb_rating": 8.5,
-                    "overview": "An updated movie overview...",
-                    "meta_score": 75,
-                    "director": "Updated Director",
-                    "star1": "Updated Actor One",
-                    "star2": "Updated Actor Two",
-                    "star3": "Updated Actor Three",
-                    "star4": "Updated Actor Four",
-                    "no_of_votes": 123456,
-                    "gross": "10,000,000"
-                  }
-    """
-    data = request.get_json()
-    movie = Movie.query.get(id)
-    if movie is None:
-        return jsonify({'error': 'Movie not found'}), 404
-
-    movie.poster_link = data.get('poster_link', movie.poster_link)
-    movie.series_title = data.get('series_title', movie.series_title)
-    movie.released_year = data.get('released_year', movie.released_year)
-    movie.certificate = data.get('certificate', movie.certificate)
-    movie.runtime = data.get('runtime', movie.runtime)
-    movie.genre = data.get('genre', movie.genre)
-    movie.imdb_rating = data.get('imdb_rating', movie.imdb_rating)
-    movie.overview = data.get('overview', movie.overview)
-    movie.meta_score = data.get('meta_score', movie.meta_score)
-    movie.director = data.get('director', movie.director)
-    movie.star1 = data.get('star1', movie.star1)
-    movie.star2 = data.get('star2', movie.star2)
-    movie.star3 = data.get('star3', movie.star3)
-    movie.star4 = data.get('star4', movie.star4)
-    movie.no_of_votes = data.get('no_of_votes', movie.no_of_votes)
-    movie.gross = data.get('gross', movie.gross)
-
-    database.session.commit()
-    return jsonify(movie.to_dict()), 200
-
-@app.route('/movies/<int:id>', methods=['DELETE'])
-def delete_movie(id):
-    """
-    Delete a movie by ID
-    ---
-    tags:
-        - Delete entry
-    parameters:
-        - name: id
-          in: path
-          type: integer
-          required: true
-          description: ID of the movie to delete
-    responses:
-        204:
-          description: No content, movie deleted.
-    """
-    movie = Movie.query.get(id)
-    if movie is None:
-        return jsonify({'error': 'Movie not found'}), 404
-
-    database.session.delete(movie)
-    database.session.commit()
-    return '', 204
 
 ### SWAGGER ###
 @app.route('/spec')
